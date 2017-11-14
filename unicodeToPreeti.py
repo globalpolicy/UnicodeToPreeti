@@ -1,3 +1,6 @@
+import argparse
+import os
+
 unicodeToPreetiDict = \
     {
         "अ": "c",
@@ -12,8 +15,8 @@ unicodeToPreetiDict = \
         "ै": "}",
         "ो": "f]",
         "ौ": "f}",
-        "ओ": "df]",
-        "औ": "df}",
+        "ओ": "cf]",
+        "औ": "cf}",
         "ं": "+",
         "ँ": "F",
         "ि": "l",
@@ -69,7 +72,9 @@ unicodeToPreetiDict = \
         "।": ".",
         "्": "\\",
         "ऊ": "pm",
-        "-": " "
+        "-": " ",
+        "(": "-",
+        ")": "_"
     }
 
 def normalizeUnicode(unicodetext):
@@ -95,13 +100,13 @@ def normalizeUnicode(unicodetext):
                                 normalized+='i'
                                 index+=1
                                 continue
-                if unicodetext[index-1]!='र' and character=='्' and unicodetext[index+1]=='र': # for kaagpaat
+                if unicodetext[index-1]!='र' and character=='्' and unicodetext[index+1]=='र': # for खुट्टा चिर्ने चिन्ह in the likes of क्रम and ट्रक
                     if unicodetext[index-1]!='ट' and unicodetext[index-1]!='ठ' and unicodetext[index-1]!='ड':
-                        normalized+='|'
+                        normalized+='|' # for sign as in क्रम
                         index+=1
                         continue
                     else:
-                        normalized+='«'
+                        normalized+='«' # for sign as in ट्रक
                         index+=1
                         continue
             except IndexError:
@@ -109,53 +114,62 @@ def normalizeUnicode(unicodetext):
             normalized+=character
         except KeyError:
             normalized+=character
-    normalized=normalized.replace('त|','q') # for tra
+    normalized=normalized.replace('त|','q') # for त्र
     return normalized
         
-
-inputfile="unicode.txt"
-with open(inputfile,"r",encoding='utf-8') as fp:
-    unicodetext=fp.read()
-normalizedunicodetext=normalizeUnicode(unicodetext)
-converted=''
-index=-1
-while index+1<len(normalizedunicodetext):
-    index+=1
-    character=normalizedunicodetext[index]
-    if character=='\ufeff':
-        continue
-    try:
+def convert(inputfile):
+    with open(inputfile,"r",encoding='utf-8') as fp:
+        unicodetext=fp.read()
+    normalizedunicodetext=normalizeUnicode(unicodetext)
+    converted=''
+    index=-1
+    while index+1<len(normalizedunicodetext):
+        index+=1
+        character=normalizedunicodetext[index]
+        if character=='\ufeff':
+            continue
         try:
-            if normalizedunicodetext[index+2]  == 'ि': # for constructs like त्ति
-                if character in list('WERTYUXASDGHJK:ZVN'):
-                    converted+='l'+character+unicodeToPreetiDict[normalizedunicodetext[index+1]]
-                    index+=2
+            try:
+                if normalizedunicodetext[index+1]=='ि': # for normal hraswo ukaar
+                    if character=='q':
+                        converted+='l' + character
+                    else:
+                        converted+='l'+ unicodeToPreetiDict[character]
+                    index+=1
                     continue
-            if normalizedunicodetext[index+3] == 'ि': # for the likes of ष्ट्रिय
-                if normalizedunicodetext[index+2] == '|' or normalizedunicodetext[index+2] == '«':
-                    if character in list('WERTYUXASDGHJK:ZVNIi'):
-                        converted+='l'+character+unicodeToPreetiDict[normalizedunicodetext[index+1]]+normalizedunicodetext[index+2]
+                
+                if normalizedunicodetext[index+2]  == 'ि': # for constructs like त्ति
+                    if character in list('WERTYUXASDGHJK:ZVN'):
+                        converted+='l'+character+unicodeToPreetiDict[normalizedunicodetext[index+1]]
+                        index+=2
+                        continue
+                
+                if normalizedunicodetext[index+1]=='्' and character=='र': # for reph as in वार्ता
+                    if normalizedunicodetext[index+3]=='ा' or normalizedunicodetext[index+3]=='ो' or normalizedunicodetext[index+3]=='ौ' or normalizedunicodetext[index+3]=='े' or normalizedunicodetext[index+3]=='ै'  or normalizedunicodetext[index+3]=='ी':
+                        converted+=unicodeToPreetiDict[normalizedunicodetext[index+2]]+unicodeToPreetiDict[normalizedunicodetext[index+3]]+'{'
                         index+=3
                         continue
-            if normalizedunicodetext[index+1]=='ि': # for normal hraswo ukaar
-                converted+='l'+unicodeToPreetiDict[character]
-                index+=1
-                continue
-            if normalizedunicodetext[index+1]=='्' and character=='र': # for reph as in वार्ता
-                if normalizedunicodetext[index+3]=='ा' or normalizedunicodetext[index+3]=='ो' or normalizedunicodetext[index+3]=='ौ' or normalizedunicodetext[index+3]=='े' or normalizedunicodetext[index+3]=='ै' or normalizedunicodetext[index+3]=='ि' or normalizedunicodetext[index+3]=='ी':
-                    converted+=unicodeToPreetiDict[normalizedunicodetext[index+2]]+unicodeToPreetiDict[normalizedunicodetext[index+3]]+'{'
-                    index+=3
+                    elif normalizedunicodetext[index+3]=='ि':
+                        converted+=unicodeToPreetiDict[normalizedunicodetext[index+3]]+unicodeToPreetiDict[normalizedunicodetext[index+2]]+'{'
+                        index+=3
+                        continue
+                    converted+=unicodeToPreetiDict[normalizedunicodetext[index+2]]+'{'
+                    index+=2
                     continue
-                converted+=unicodeToPreetiDict[normalizedunicodetext[index+2]]+'{'
-                index+=2
-                continue
-            
-        except IndexError:
-            pass
-        converted+= unicodeToPreetiDict[character]
-    except KeyError:
-        converted+=character
+
+                if normalizedunicodetext[index+3] == 'ि': # for the likes of ष्ट्रिय
+                    if normalizedunicodetext[index+2] == '|' or normalizedunicodetext[index+2] == '«':
+                        if character in list('WERTYUXASDGHJK:ZVNIi'):
+                            converted+='l'+character+unicodeToPreetiDict[normalizedunicodetext[index+1]]+normalizedunicodetext[index+2]
+                            index+=3
+                            continue
     
+            except IndexError:
+                pass
+            converted+= unicodeToPreetiDict[character]
+        except KeyError:
+            converted+=character
+        
     converted=converted.replace('Si','I') # Si in preeti is aadha ka aadha ष, so replace with I which is aadha क्ष
     converted=converted.replace('H`','1') # H` is the product of composite nature of unicode ज्ञ
     converted=converted.replace('b\w','4') # b\w means in preeti द halanta ध, so replace the composite
@@ -165,6 +179,21 @@ while index+1<len(normalizedunicodetext):
     converted=converted.replace('Tt','Q') # composite for त्त
     converted=converted.replace('b\lj','lå') # composite for द्वि
     converted=converted.replace('b\j','å') # composite for द्व
+    return converted
 
-with open('output.txt','w') as fp:
-    fp.write(converted)
+argparser=argparse.ArgumentParser(description='Convert Unicode Nepali text into Preeti')
+argparser.add_argument('inputFile',help='Input file containing Unicode text')
+argparser.add_argument('outputFile',help='Output file path')
+args=argparser.parse_args()
+inputfile=args.inputFile
+outputfile=args.outputFile
+
+if os.path.exists(inputfile) and os.path.isfile(inputfile):
+    if not os.path.exists(outputfile):
+        with open(outputfile,'w') as fp:
+            fp.write(convert(inputfile))
+            print("Output file saved as {}".format(outputfile))
+    else:
+        print("Output file {} already exists!\nAborting to avoid overwriting.".format(outputfile))
+else:
+    print("Input file {} doesn't exist!".format(inputfile))
