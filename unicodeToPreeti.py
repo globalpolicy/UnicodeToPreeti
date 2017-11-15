@@ -140,7 +140,7 @@ def convert(inputfile):
                 
                 if normalizedunicodetext[index+2]  == 'ि': # for constructs like त्ति
                     if character in list('WERTYUXASDGHJK:ZVN'):
-                       if normalizedunicodetext[index+1]!='q': # if not like न्त्रि
+                        if normalizedunicodetext[index+1]!='q': # if not like न्त्रि
                             converted+='l'+character+unicodeToPreetiDict[normalizedunicodetext[index+1]]
                             index+=2
                             continue
@@ -184,6 +184,7 @@ def convert(inputfile):
     converted=converted.replace('Tt','Q') # composite for त्त
     converted=converted.replace('b\lj','lå') # composite for द्वि
     converted=converted.replace('b\j','å') # composite for द्व
+    converted=converted.replace('0f\\','0') # composite for ण् to get the aadha ण in say गण्डक
     return converted
 
 argparser=argparse.ArgumentParser(description='Convert Unicode Nepali text into Preeti')
