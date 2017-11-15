@@ -185,6 +185,7 @@ def convert(inputfile):
     converted=converted.replace('b\lj','lå') # composite for द्वि
     converted=converted.replace('b\j','å') # composite for द्व
     converted=converted.replace('0f\\','0') # composite for ण् to get the aadha ण in say गण्डक
+    converted=converted.replace('`\\','~') # composite for aadha ञ्
     return converted
 
 argparser=argparse.ArgumentParser(description='Convert Unicode Nepali text into Preeti')
