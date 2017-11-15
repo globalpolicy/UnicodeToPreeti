@@ -140,9 +140,14 @@ def convert(inputfile):
                 
                 if normalizedunicodetext[index+2]  == 'ि': # for constructs like त्ति
                     if character in list('WERTYUXASDGHJK:ZVN'):
-                        converted+='l'+character+unicodeToPreetiDict[normalizedunicodetext[index+1]]
-                        index+=2
-                        continue
+                       if normalizedunicodetext[index+1]!='q': # if not like न्त्रि
+                            converted+='l'+character+unicodeToPreetiDict[normalizedunicodetext[index+1]]
+                            index+=2
+                            continue
+                        elif normalizedunicodetext[index+1]=='q':
+                            converted+='l'+character+normalizedunicodetext[index+1]
+                            index+=2
+                            continue
                 
                 if normalizedunicodetext[index+1]=='्' and character=='र': # for reph as in वार्ता
                     if normalizedunicodetext[index+3]=='ा' or normalizedunicodetext[index+3]=='ो' or normalizedunicodetext[index+3]=='ौ' or normalizedunicodetext[index+3]=='े' or normalizedunicodetext[index+3]=='ै'  or normalizedunicodetext[index+3]=='ी':
